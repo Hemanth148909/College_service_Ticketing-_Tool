@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./Login.css"; // Custom styles
 
 const Login = ({ setUser }) => {
   const [user, setLocalUser] = useState({ username: "", password: "" });
@@ -14,8 +15,8 @@ const Login = ({ setUser }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");  // Clear previous errors
-    setSuccess(""); // Clear success message
+    setError("");  
+    setSuccess(""); 
 
     try {
       const res = await axios.post("http://localhost:5000/login", user, {
@@ -23,24 +24,32 @@ const Login = ({ setUser }) => {
         headers: { "Content-Type": "application/json" },
       });
 
-      setUser(res.data); // Update the user state in App.js
-      setSuccess("Login Successful! Redirecting...");
-      setTimeout(() => navigate("/dashboard"), 1000); // Redirect after 1 sec
+      setUser(res.data);
+      setSuccess("✅ Login Successful! Redirecting...");
+      setTimeout(() => navigate("/dashboard"), 1000);
     } catch (error) {
-      setError("Invalid Credentials! Please try again.");
+      setError("❌ Invalid Credentials! Please try again.");
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h2>Login</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
-      <form onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder="Username" className="form-control mb-2" onChange={handleChange} required />
-        <input type="password" name="password" placeholder="Password" className="form-control mb-2" onChange={handleChange} required />
-        <button className="btn btn-success">Login</button>
-      </form>
+    <div className="login-container">
+      <div className="login-box">
+        <h2>🔑 Login</h2>
+
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
+
+        <form onSubmit={handleSubmit}>
+          <input type="text" name="username" placeholder="Username" onChange={handleChange} required />
+          <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+          <button type="submit">🚀 Login</button>
+        </form>
+
+        <p className="signup-text">
+          Don't have an account? <a href="/register">Sign up</a>
+        </p>
+      </div>
     </div>
   );
 };

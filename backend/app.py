@@ -7,6 +7,7 @@ from flask_cors import CORS  # Import Flask-CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
 from flask.cli import with_appcontext
+import uuid
 import os
 
 # Initialize Flask app
@@ -117,23 +118,32 @@ def get_departments():
 
 ## Route to create a ticket
 @app.route("/create_ticket", methods=["POST"])
+@login_required
 def create_ticket():
     try:
-        data = request.get_json()
-        print("Received ticket data:", data)  # Debugging
+        title = request.form.get("title")
+        description = request.form.get("description")
+        department_id = request.form.get("department_id")
+        image = request.files.get("image")  # Get the uploaded image
 
-        if not data or "title" not in data or "description" not in data or "department_id" not in data:
+        if not title or not description or not department_id:
             return jsonify({"error": "Missing title, description, or department_id"}), 400
 
-        if not current_user.is_authenticated:
-            return jsonify({"error": "User not authenticated"}), 401  # Ensure user is logged in
+        image_filename = None
+        if image:
+            filename = secure_filename(image.filename)
+            unique_filename = f"{uuid.uuid4()}_{filename}"  # Generate a unique filename
+            image_path = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
+            image.save(image_path)
+            image_filename = unique_filename  # Store only the filename in DB
 
         new_ticket = Ticket(
-            title=data["title"],
-            description=data["description"],
+            title=title,
+            description=description,
             student_id=current_user.id,
             status="Pending",
-            department_id=data["department_id"],
+            department_id=department_id,
+            image=image_filename  # Store filename in DB
         )
         db.session.add(new_ticket)
         db.session.commit()
@@ -142,9 +152,6 @@ def create_ticket():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-
 
 
 @app.route("/my_tickets", methods=["GET"])
